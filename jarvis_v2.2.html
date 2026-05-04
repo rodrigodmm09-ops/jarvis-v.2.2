@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JARVIS v2.2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="jarvis_v2.2.css">
+</head>
+<body>
+
+<div class="bg-glow1"></div>
+<div class="bg-glow2"></div>
+<div class="bg-grid"></div>
+
+<!-- Modal Acceso -->
+<div class="modal-overlay" id="modalKey">
+  <div class="modal">
+    <div class="modal-title">⬡ JARVIS v2.0</div>
+    <div class="modal-sub">Introduce la contraseña de acceso para activar a Jarvis.</div>
+    <div>
+      <div class="modal-label" style="margin-bottom:6px">CONTRASEÑA DE ACCESO</div>
+      <input type="password" id="apiKeyInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') conectar()"/>
+    </div>
+    <button class="btn-primary" onclick="conectar()">ACTIVAR SISTEMA →</button>
+    <div class="modal-warn">⚠ La contraseña se guarda únicamente en este dispositivo.</div>
+  </div>
+</div>
+
+<!-- Modal Configuración -->
+<div class="modal-overlay" id="modalConfig" style="display:none">
+  <div class="modal">
+    <div class="modal-title">⚙ CONFIGURACIÓN</div>
+    <div class="modal-sub">Ajusta los límites de tokens según tu plan actual. Puedes cambiarlo cuando actualices tu suscripción.</div>
+
+    <div>
+      <div class="modal-label" style="margin-bottom:6px">LÍMITE TOTAL DE TOKENS (tu plan)</div>
+      <input type="number" id="cfgTotal" placeholder="Ej: 100000" min="1000"/>
+    </div>
+
+    <div class="modal-row">
+      <div>
+        <div class="modal-label" style="margin-bottom:6px">% MÁXIMO A GASTAR</div>
+        <input type="number" id="cfgMax" placeholder="50" min="1" max="100"/>
+      </div>
+      <div>
+        <div class="modal-label" style="margin-bottom:6px">% PARA AVISAR</div>
+        <input type="number" id="cfgWarn" placeholder="40" min="1" max="100"/>
+      </div>
+    </div>
+
+    <div class="config-preview">
+      Con estos valores Jarvis te avisará cuando alcances el <span id="previewWarn">40%</span> de tu límite (<span id="previewWarnVal">—</span> tokens) y se detendrá al <span id="previewMax">50%</span> (<span id="previewMaxVal">—</span> tokens).
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <div style="flex:1">
+        <div class="config-temp-row">
+          <div class="modal-label">TEMPERATURA</div>
+          <div id="tempDisplay" class="temp-display">0.7 — 💡 Creativo</div>
+        </div>
+        <input type="range" id="cfgTemp" min="0" max="1" step="0.05" value="0.7" oninput="updateTempDisplay()"/>
+        <div class="temp-labels">
+          <span class="temp-label-precise">0 PRECISO</span>
+          <span class="temp-label-mid">0.5</span>
+          <span class="temp-label-creative">1 CREATIVO</span>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="guardarConfig()" style="flex:1">GUARDAR →</button>
+      <button class="btn-secondary" onclick="cerrarConfig()">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="container" id="mainContainer">
+  <div class="c-tl"></div><div class="c-tr"></div>
+  <div class="c-bl"></div><div class="c-br"></div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div class="status-dot" id="statusDot" style="background:#ff6b00;box-shadow:0 0 10px #ff6b00"></div>
+      <div>
+        <div class="header-title">JARVIS v2.0</div>
+        <div class="header-sub" id="headerSub">INICIANDO SISTEMAS...</div>
+      </div>
+      <div class="header-right">
+        <button class="btn-header" id="btnExam" onclick="activateExam()">📝 EXAMEN</button>
+        <button class="btn-header" id="btnConfig" onclick="abrirConfig()" style="display:none">⚙ CONFIG</button>
+        <div class="hud-dots">
+          <div class="hud-dot hud-red"></div>
+          <div class="hud-dot hud-yellow"></div>
+          <div class="hud-dot hud-green"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Token bar -->
+    <div class="token-bar-wrap" id="tokenBarWrap">
+      <div class="token-bar-header">
+        <span class="token-label">TOKENS SESIÓN</span>
+        <span class="token-count" id="tokenCount">0 / 0</span>
+      </div>
+      <div class="token-track">
+        <div class="token-fill" id="tokenFill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert banner -->
+  <div class="alert-banner alert-warn" id="alertWarn">⚠ ATENCIÓN — HAS ALCANZADO EL 40% DE TU LÍMITE DE TOKENS</div>
+  <div class="alert-banner alert-stop" id="alertStop">🔴 LÍMITE ALCANZADO — JARVIS DETENIDO. REINICIA LA SESIÓN O AJUSTA EL LÍMITE EN ⚙ CONFIG</div>
+
+  <!-- Boot -->
+  <div class="boot-screen" id="bootScreen">
+    <div class="boot-title">JARVIS</div>
+    <div class="boot-sub">INICIALIZANDO SISTEMAS PRINCIPALES...</div>
+    <div class="boot-bar"><div class="boot-bar-fill"></div></div>
+    <div class="boot-dots">
+      <div class="boot-dot" style="animation-delay:0s"></div>
+      <div class="boot-dot" style="animation-delay:0.2s"></div>
+      <div class="boot-dot" style="animation-delay:0.4s"></div>
+      <div class="boot-dot" style="animation-delay:0.6s"></div>
+      <div class="boot-dot" style="animation-delay:0.8s"></div>
+    </div>
+  </div>
+
+  <!-- Saludo -->
+  <div class="saludo-bar" id="saludoBar">
+    <span class="saludo-prefix">JARVIS ›</span>
+    <span class="saludo-text" id="saludoText"></span>
+  </div>
+
+  <!-- Messages -->
+  <div class="messages" id="messages">
+    <div class="file-prompt" id="filePrompt">
+      <button class="btn-file" onclick="document.getElementById('fileInput').click()">📎 SUBIR PDF O WORD</button>
+      <span class="file-hint">o escribe "no" para continuar sin archivo</span>
+    </div>
+  </div>
+
+  <!-- Arc Reactor HUD -->
+  <div id="speakingHUD">
+    <div class="hud-container">
+      <div class="hud-glow"></div>
+      <div id="hudBars"></div>
+      <div class="hud-core"></div>
+    </div>
+    <div class="hud-label">TRANSMITIENDO...</div>
+  </div>
+
+  <!-- Input bar -->
+  <div class="input-bar" id="inputBar">
+    <span class="input-prefix">RODRIGO ›</span>
+    <input type="text" id="userInput" placeholder="Escribe, !examen, /concentracion, /normal, /exportar..."/>
+    <input type="file" id="fileInput" accept=".pdf,.docx" style="display:none" onchange="handleFile(event)"/>
+    <button class="btn-voice" id="btnMic" onclick="toggleMic()" title="Micrófono on/off">🎤</button>
+    <button class="btn-tts" id="btnTts" onclick="toggleTts()" title="Voz on/off">🔇</button>
+    <button class="btn-attach" id="btnAttach" onclick="document.getElementById('fileInput').click()">📎</button>
+    <button class="btn-send" id="btnSend" onclick="sendMessage()">ENVIAR</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="jarvis_v2.2.js"></script>
+</body>
+</html>
