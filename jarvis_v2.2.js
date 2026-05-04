@@ -1,6 +1,11 @@
 // ── PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
+// ── Marked (markdown renderer)
+if (typeof marked !== "undefined") {
+  marked.setOptions({ breaks: true, gfm: true });
+}
+
 // ── Saludos aleatorios al arrancar
 const SALUDOS = [
   "Otro día más salvando a Rodrigo de sus dudas...",
@@ -338,7 +343,7 @@ function checkLimits() {
 // ─────────────────────────────────────────────
 function setDot(state) {
   const d = document.getElementById("statusDot");
-  const map = { online:"#00ff88", exam:"#ffbd2e", boot:"#ff6b00" };
+  const map = { online:"#ff2020", exam:"#ff8800", boot:"#b00000" };
   const c = map[state] || "#00ff88";
   d.style.background = c; d.style.boxShadow = `0 0 10px ${c}, 0 0 20px ${c}40`;
 }
@@ -354,7 +359,17 @@ function addMsg(role, content, tokens) {
   const w = document.createElement("div");
   w.className = `msg-wrap ${role}`;
   const tokenBadge = (role === "assistant" && tokens) ? `<div class="msg-tokens">+${tokens} tokens</div>` : "";
-  w.innerHTML = `<div class="msg-label">${role === "user" ? "RODRIGO" : "JARVIS"}</div><div class="msg-bubble">${esc(content)}</div>${tokenBadge}`;
+  const labelText = role === "user" ? "RODRIGO" : "JARVIS";
+  const avatarHtml = role === "user"
+    ? `<div class="msg-avatar user-avatar">R</div>`
+    : `<div class="msg-avatar assistant-avatar">▲</div>`;
+  const metaHtml = role === "user"
+    ? `<div class="msg-meta"><div class="msg-label">${labelText}</div>${avatarHtml}</div>`
+    : `<div class="msg-meta">${avatarHtml}<div class="msg-label">${labelText}</div></div>`;
+  const bubbleContent = role === "assistant" && typeof marked !== "undefined"
+    ? marked.parse(content)
+    : esc(content);
+  w.innerHTML = `${metaHtml}<div class="msg-bubble">${bubbleContent}</div>${tokenBadge}`;
   msgs.appendChild(w);
   msgs.scrollTop = msgs.scrollHeight;
 }
@@ -363,7 +378,7 @@ function showTyping() {
   const msgs = document.getElementById("messages");
   const el = document.createElement("div");
   el.className = "msg-wrap assistant"; el.id = "typing";
-  el.innerHTML = `<div class="msg-label">JARVIS</div><div class="typing"><div class="typing-dot" style="animation-delay:0s"></div><div class="typing-dot" style="animation-delay:0.3s"></div><div class="typing-dot" style="animation-delay:0.6s"></div></div>`;
+  el.innerHTML = `<div class="msg-meta"><div class="msg-avatar assistant-avatar">▲</div><div class="msg-label">JARVIS</div></div><div class="typing"><div class="typing-dot" style="animation-delay:0s"></div><div class="typing-dot" style="animation-delay:0.3s"></div><div class="typing-dot" style="animation-delay:0.6s"></div></div>`;
   msgs.appendChild(el); msgs.scrollTop = msgs.scrollHeight;
 }
 
@@ -608,8 +623,8 @@ async function generateExam(fileData) {
     if (!Array.isArray(examQuestions) || !examQuestions.length) throw new Error("Sin preguntas");
     examAnswers = []; examIndex = 0; examState = "in_progress";
     hideTyping();
-    addMsg("assistant", `¡Examen listo! 30 preguntas sobre "${examTopic}". Vamos allá, señor Rodrigo.`);
-    setSubtitle("MODO EXAMEN — PREGUNTA 1/30");
+    addMsg("assistant", `¡Examen listo! ${examQuestions.length} preguntas sobre "${examTopic}". Vamos allá, señor Rodrigo.`);
+    setSubtitle(`MODO EXAMEN — PREGUNTA 1/${examQuestions.length}`);
     showQuestion();
   } catch(err) {
     hideTyping();
@@ -626,11 +641,13 @@ async function generateExam(fileData) {
 function showQuestion() {
   const q = examQuestions[examIndex];
   const msgs = document.getElementById("messages");
+  const total = examQuestions.length;
+  const pct = Math.round((examIndex / total) * 100);
 
   const card = document.createElement("div");
   card.className = "exam-card";
   card.style.display = "block";
-  card.innerHTML = `<div class="exam-num">⬡ PREGUNTA ${examIndex + 1} / 30</div><div class="exam-question">${esc(q.question)}</div><div class="exam-options"></div>`;
+  card.innerHTML = `<div class="exam-progress-wrap"><div class="exam-progress-fill" style="width:${pct}%"></div></div><div class="exam-num">⬡ PREGUNTA ${examIndex + 1} / ${total}</div><div class="exam-question">${esc(q.question)}</div><div class="exam-options"></div>`;
 
   const opts = card.querySelector(".exam-options");
   q.options.forEach(opt => {
@@ -675,14 +692,15 @@ function handleAnswer(label, card) {
 
   const next = examIndex + 1;
   if (next >= examQuestions.length) { setTimeout(showResults, 400); }
-  else { examIndex = next; setSubtitle(`MODO EXAMEN — PREGUNTA ${examIndex + 1}/30`); setTimeout(showQuestion, 150); }
+  else { examIndex = next; setSubtitle(`MODO EXAMEN — PREGUNTA ${examIndex + 1}/${examQuestions.length}`); setTimeout(showQuestion, 150); }
 }
 
 function showResults() {
+  const total = examQuestions.length;
   const correctas = examAnswers.filter((a,i) => a === examQuestions[i].correct).length;
-  const falladas = 30 - correctas;
+  const falladas = total - correctas;
   const errores = examQuestions.map((q,i) => ({q,i,ua:examAnswers[i]})).filter(({q,ua}) => ua !== q.correct);
-  let res = `\n━━━━━━━━━━━━━━━━━━━━━━━━\n📊 RESULTADOS FINALES\n━━━━━━━━━━━━━━━━━━━━━━━━\n✅ Correctas: ${correctas}/30\n❌ Falladas: ${falladas}/30`;
+  let res = `\n━━━━━━━━━━━━━━━━━━━━━━━━\n📊 RESULTADOS FINALES\n━━━━━━━━━━━━━━━━━━━━━━━━\n✅ Correctas: ${correctas}/${total}\n❌ Falladas: ${falladas}/${total}`;
   if (errores.length) { res += `\n\n📋 CORRECCIONES:`; errores.forEach(({q,i,ua}) => { res += `\n\nP${i+1}: ${q.question}\n→ Tu respuesta (${ua}): ${q.options.find(o=>o.label===ua)?.text}\n→ Correcta (${q.correct}): ${q.options.find(o=>o.label===q.correct)?.text}`; }); }
   if (falladas === 0) res += "\n\n🏆 Perfecto. Aunque seguro fue suerte, señor Rodrigo.";
   else if (falladas <= 5) res += "\n\nNada mal. Podrías haber estudiado más, pero aprobado.";

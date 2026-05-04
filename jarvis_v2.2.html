@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>JARVIS v2.2</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="jarvis_v2.2.css">
 </head>
 <body>
@@ -77,13 +77,14 @@
 <div class="container" id="mainContainer">
   <div class="c-tl"></div><div class="c-tr"></div>
   <div class="c-bl"></div><div class="c-br"></div>
+  <div class="scan-line"></div>
 
   <!-- Header -->
   <div class="header">
     <div class="header-top">
-      <div class="status-dot" id="statusDot" style="background:#ff6b00;box-shadow:0 0 10px #ff6b00"></div>
+      <div class="status-dot" id="statusDot" style="background:#b00000;box-shadow:0 0 10px #b00000"></div>
       <div>
-        <div class="header-title">JARVIS v2.0</div>
+        <div class="header-title glitch" data-text="JARVIS v2.0">JARVIS v2.0 <span class="warn-icon">⚠</span></div>
         <div class="header-sub" id="headerSub">INICIANDO SISTEMAS...</div>
       </div>
       <div class="header-right">
@@ -115,7 +116,7 @@
 
   <!-- Boot -->
   <div class="boot-screen" id="bootScreen">
-    <div class="boot-title">JARVIS</div>
+    <div class="boot-title glitch" data-text="JARVIS">JARVIS</div>
     <div class="boot-sub">INICIALIZANDO SISTEMAS PRINCIPALES...</div>
     <div class="boot-bar"><div class="boot-bar-fill"></div></div>
     <div class="boot-dots">
@@ -165,6 +166,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <script src="jarvis_v2.2.js"></script>
 </body>
 </html>
